@@ -1223,7 +1223,7 @@ func (o *OTSClient) BatchWriteRow(batch_list *OTSBatchWriteRowRequest) (response
 	return r.(*OTSBatchWriteRowResponse), nil
 }
 
-// 说明：根据范围条件获取多行数据。
+// 说明：根据范围条件获取多行数据(限制条数5000)。
 //
 // 		``table_name``是对应的表名。
 // 		``direction``表示范围的方向，字符串格式，取值包括'FORWARD'和'BACKWARD'。
@@ -1291,9 +1291,120 @@ func (o *OTSClient) GetRange(table_name string, direction string,
 	return r.(*OTSGetRangeResponse), nil
 }
 
-// func (o *OTSClient) XGetRange() {
+// 说明：根据范围条件获取多行数据(限制条数50000)。
 //
-// }
+// 		``table_name``是对应的表名。
+// 		``direction``表示范围的方向，字符串格式，取值包括'FORWARD'和'BACKWARD'。
+// 		``inclusive_start_primary_key``表示范围的起始主键（在范围内）。
+// 		``exclusive_end_primary_key``表示范围的结束主键（不在范围内）。
+// 		``columns_to_get``是可选参数，表示要获取的列的名称列表，类型为``otstype.OTSColumnsToGet``；如果为nil，表示获取所有列。
+// 		``limit``是可选参数，表示最多读取多少行；如果为0，则没有限制。
+//
+// 		返回：符合条件的结果列表。
+// 		      错误信息。
+//
+// 		``response_row_list``为``otstype.OTSGetRangeResponse``类的实例包含了：
+// 		``Consumed``表示消耗的CapacityUnit，是``otstype.OTSCapacityUnit``类的实例。
+// 		``NextStartPrimaryKey``表示下次get_range操作的起始点的主健列，类型为``otstype.OTSPrimaryKey``。
+// 		``Rows``表示本次操作返回的行数据列表，是``otstype.OTSRows``类的实例。
+//
+// 		示例：
+//
+// 		// get_range
+// 		// 查询区间：[(1, INF_MIN), (4, INF_MAX))，左闭右开。
+// 		inclusive_start_primary_key := &OTSPrimaryKey{
+// 			"gid": 1,
+// 			"uid": OTSColumnType_INF_MIN,
+// 		}
+// 		exclusive_end_primary_key := &OTSPrimaryKey{
+// 			"gid": 4,
+// 			"uid": OTSColumnType_INF_MAX,
+// 		}
+// 		columns_to_get := &OTSColumnsToGet{
+// 			"gid", "uid", "name", "address", "mobile", "age",
+// 		}
+//
+// 		// 选择方向
+// 		// OTSDirection_FORWARD
+// 		// OTSDirection_BACKWARD
+// 		response_row_list, ots_err := ots_client.GetRange("myTable", OTSDirection_FORWARD,
+// 			inclusive_start_primary_key, exclusive_end_primary_key, columns_to_get, 100)
+//
+func (o *OTSClient) XGetRange(table_name string, direction string,
+	inclusive_start_primary_key *OTSPrimaryKey,
+	exclusive_end_primary_key *OTSPrimaryKey,
+	columns_to_get *OTSColumnsToGet,
+	limit int32) (response_row_lists *OTSGetRangeResponse, err *OTSError) {
+	err = new(OTSError)
+	if table_name == "" {
+		return nil, err.SetClientMessage("[XGetRange] table_name should not be empty")
+	}
+	if direction != OTSDirection_FORWARD && direction != OTSDirection_BACKWARD {
+		return nil, err.SetClientMessage("[XGetRange] direction should be FORWARD or BACKWARD")
+	}
+	if exclusive_end_primary_key == nil {
+		return nil, err.SetClientMessage("[XGetRange] exclusive_end_primary_key should not be nil")
+	}
+	if limit < int32(0) || limit > int32(50000) {
+		return nil, err.SetClientMessage("[XGetRange] number is error")
+	}
+	if limit == int32(0) {
+		limit = int32(20160)
+	}
+	var resp []reflect.Value
+	var service_err *OTSServiceError
+	var consumed int32
+	ots_capacity_unit := &OTSCapacityUnit{}
+	ots_rows := make([]*OTSRow, 0)
+	response_row_lists = &OTSGetRangeResponse{}
+	for ; limit > int32(0); limit -= int32(5000) {
+		if limit < int32(5000) {
+			resp, service_err = o._request_helper("GetRange", table_name, direction, inclusive_start_primary_key, exclusive_end_primary_key, columns_to_get, limit)
+		} else {
+			resp, service_err = o._request_helper("GetRange", table_name, direction, inclusive_start_primary_key, exclusive_end_primary_key, columns_to_get, int32(5000))
+		}
+		if service_err != nil {
+			return nil, err.SetServiceError(service_err)
+		}
+		r, e := o._check_request_helper_error(resp)
+		if e != nil {
+			return nil, err.SetClientMessage("[XGetRange] %s", e)
+		}
+		response_row_list := r.(*OTSGetRangeResponse)
+		consumed += response_row_list.Consumed.GetRead()
+		for _, v := range response_row_list.GetRows() {
+			row := &OTSRow{}
+			row.AttributeColumns = v.AttributeColumns
+			row.PrimaryKeyColumns = v.PrimaryKeyColumns
+			ots_rows = append(ots_rows, row)
+		}
+		if response_row_list.GetNextStartPrimaryKey() != nil {
+			inclusive_start_primary_key = &response_row_list.NextStartPrimaryKey
+			response_row_lists.NextStartPrimaryKey = response_row_list.NextStartPrimaryKey
+		} else {
+			response_row_lists.Rows = _parse_row_list(ots_rows)
+			ots_capacity_unit.Read = consumed
+			response_row_lists.Consumed = ots_capacity_unit
+			return response_row_lists, nil
+		}
+	}
+	ots_capacity_unit.Read = consumed
+	response_row_lists.Consumed = ots_capacity_unit
+	response_row_lists.Rows = _parse_row_list(ots_rows)
+	return response_row_lists, nil
+}
+
+func _parse_row_list(rows []*OTSRow) OTSRows {
+	if len(rows) == 0 {
+		return nil
+	}
+
+	ots_rows := make(OTSRows, len(rows))
+	for i, v := range rows {
+		ots_rows[i] = v
+	}
+	return ots_rows
+}
 
 func (o *OTSClient) Version() string {
 	return "ots_golang_sdk_" + VERSION

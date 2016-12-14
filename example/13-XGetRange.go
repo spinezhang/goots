@@ -54,7 +54,7 @@ func main() {
 	// OTSDirection_FORWARD
 	// OTSDirection_BACKWARD
 	response_row_list, ots_err := ots_client.XGetRange("dataqueue", OTSDirection_BACKWARD,
-		inclusive_start_primary_key, exclusive_end_primary_key, columns_to_get, 5000)
+		inclusive_start_primary_key, exclusive_end_primary_key, columns_to_get, 10000)
 	if ots_err != nil {
 		fmt.Println(ots_err)
 		os.Exit(1)

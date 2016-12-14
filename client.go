@@ -1298,7 +1298,7 @@ func (o *OTSClient) GetRange(table_name string, direction string,
 // 		``inclusive_start_primary_key``表示范围的起始主键（在范围内）。
 // 		``exclusive_end_primary_key``表示范围的结束主键（不在范围内）。
 // 		``columns_to_get``是可选参数，表示要获取的列的名称列表，类型为``otstype.OTSColumnsToGet``；如果为nil，表示获取所有列。
-// 		``limit``是可选参数，表示最多读取多少行；如果为0，则没有限制。(limit类型为int32,最大能传值2147483647,调用时最好手动进行限制)
+// 		``limit``是可选参数，表示最多读取多少行；如果为0，则没有限制(limit类型为int32,最大能传值2147483647,调用时最好手动进行限制)。
 //
 // 		返回：符合条件的结果列表。
 // 		      错误信息。

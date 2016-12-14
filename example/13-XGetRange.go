@@ -75,7 +75,7 @@ func main() {
 	}
 	fmt.Println("成功读取数据，消耗的读CapacityUnit为:", response_row_list.Consumed.GetRead())
 	if response_row_list.GetNextStartPrimaryKey() != nil {
-		fmt.Println("还有数据未读取完毕，用户可以继续调用GetRange()进行读取")
+		fmt.Println("还有数据未读取完毕，用户可以继续调用XGetRange()进行读取")
 		fmt.Println("下次开始的主键:", response_row_list.GetNextStartPrimaryKey())
 	}
 }

@@ -1310,7 +1310,7 @@ func (o *OTSClient) GetRange(table_name string, direction string,
 //
 // 		示例：
 //
-// 		// get_range
+// 		// x_get_range
 // 		// 查询区间：[(1, INF_MIN), (4, INF_MAX))，左闭右开。
 // 		inclusive_start_primary_key := &OTSPrimaryKey{
 // 			"gid": 1,
@@ -1327,7 +1327,7 @@ func (o *OTSClient) GetRange(table_name string, direction string,
 // 		// 选择方向
 // 		// OTSDirection_FORWARD
 // 		// OTSDirection_BACKWARD
-// 		response_row_list, ots_err := ots_client.GetRange("myTable", OTSDirection_FORWARD,
+// 		response_row_list, ots_err := ots_client.XGetRange("myTable", OTSDirection_FORWARD,
 // 			inclusive_start_primary_key, exclusive_end_primary_key, columns_to_get, 100)
 //
 func (o *OTSClient) XGetRange(table_name string, direction string,
@@ -1345,9 +1345,9 @@ func (o *OTSClient) XGetRange(table_name string, direction string,
 	if exclusive_end_primary_key == nil {
 		return nil, err.SetClientMessage("[XGetRange] exclusive_end_primary_key should not be nil")
 	}
-	if limit < int32(0) {
+	if limit < 0 {
 		return nil, err.SetClientMessage("[XGetRange] limit is error")
-	} else if limit == int32(0) {
+	} else if limit == 0 {
 		limit = int32(2147483647)
 	}
 	var resp []reflect.Value

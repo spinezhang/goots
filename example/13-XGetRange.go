@@ -15,10 +15,10 @@ import (
 
 // modify it to yours
 const (
-	ENDPOINT     = "http://duoxieyun-dev.cn-hangzhou.ots.aliyuncs.com"
-	ACCESSID     = "LTAIlepR6Ax5XmGQ"
-	ACCESSKEY    = "8zoOEoSDyWGAYj51VuqpYGLRYs1xsZ"
-	INSTANCENAME = "duoxieyun-dev"
+	ENDPOINT     = "your_instance_address"
+	ACCESSID     = "your_accessid"
+	ACCESSKEY    = "your_accesskey"
+	INSTANCENAME = "your_instance_name"
 )
 
 func main() {
@@ -34,26 +34,24 @@ func main() {
 		fmt.Println(err)
 	}
 
-	// get_range
+	// x_get_range
 	// 查询区间：[(1, INF_MIN), (4, INF_MAX))，左闭右开。
 	inclusive_start_primary_key := &OTSPrimaryKey{
-		"DeviceId":  "DRY00101",
-		"Timestamp": 1479021490,
-		"Domain":    OTSColumnType_INF_MAX,
+		"gid": 1,
+		"uid": OTSColumnType_INF_MIN,
 	}
 	exclusive_end_primary_key := &OTSPrimaryKey{
-		"DeviceId":  "DRY00101",
-		"Timestamp": 1479020770,
-		"Domain":    OTSColumnType_INF_MIN,
+		"gid": 4,
+		"uid": OTSColumnType_INF_MAX,
 	}
 	columns_to_get := &OTSColumnsToGet{
-		"DeviceId", "Timestamp", "Domain", "Raw",
+		"gid", "uid", "name", "address", "mobile", "age",
 	}
 
 	// 选择方向
 	// OTSDirection_FORWARD
 	// OTSDirection_BACKWARD
-	response_row_list, ots_err := ots_client.XGetRange("dataqueue", OTSDirection_BACKWARD,
+	response_row_list, ots_err := ots_client.XGetRange("myTable", OTSDirection_FORWARD,
 		inclusive_start_primary_key, exclusive_end_primary_key, columns_to_get, 10000)
 	if ots_err != nil {
 		fmt.Println(ots_err)
@@ -63,14 +61,16 @@ func main() {
 		for i, v := range response_row_list.GetRows() {
 			if v.GetPrimaryKeyColumns() != nil {
 				fmt.Println("第 ", i, " 行:",
-					"DeviceId:", v.GetPrimaryKeyColumns().Get("DeviceId"),
-					"Timestamp:", v.GetPrimaryKeyColumns().Get("Timestamp"),
-					"Domain:", v.GetPrimaryKeyColumns().Get("Domain"))
+					"gid:", v.GetPrimaryKeyColumns().Get("gid"),
+					"uid:", v.GetPrimaryKeyColumns().Get("uid"))
 			} else {
 				fmt.Println("第 ", i, " 行:")
 			}
 
-			fmt.Println("    - Raw信息:", v.GetAttributeColumns().Get("Raw"))
+			fmt.Println("    - name信息:", v.GetAttributeColumns().Get("name"))
+			fmt.Println("    - address信息:", v.GetAttributeColumns().Get("address"))
+			fmt.Println("    - age信息:", v.GetAttributeColumns().Get("age"))
+			fmt.Println("    - mobile信息:", v.GetAttributeColumns().Get("mobile"))
 		}
 	}
 	fmt.Println("成功读取数据，消耗的读CapacityUnit为:", response_row_list.Consumed.GetRead())

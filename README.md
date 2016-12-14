@@ -37,7 +37,7 @@ Tips: 使用OTS前，请参考下[OTS使用限制项](https://help.aliyun.com/do
 	- [BatchGetRow](https://github.com/GiterLab/goots/blob/master/doc/goots-doc/BatchGetRow.md) ☑
 	- [BatchWriteRow](https://github.com/GiterLab/goots/blob/master/doc/goots-doc/BatchWriteRow.md) ☑
 	- [GetRange](https://github.com/GiterLab/goots/blob/master/doc/goots-doc/GetRange.md) ☑
-	- <del>XGetRange</del>
+	- [XGetRange](https://github.com/GiterLab/goots/blob/master/doc/goots-doc/XGetRange.md) ☑
 
 ## Install
 

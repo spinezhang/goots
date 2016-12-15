@@ -43,7 +43,6 @@ func newProtocol(protocol *ots_protocol) *ots_protocol {
 		return &defaultProtocol
 	}
 
-	protocol = new(ots_protocol)
 	protocol.api_version = API_VERSION
 	protocol.encoder = coder.EncodeRequest
 	protocol.decoder = coder.DecodeRequest

@@ -150,7 +150,8 @@ func New(end_point, accessid, accesskey, instance_name string, kwargs ...interfa
 	}
 	urllib.SetDefaultSetting(url_setting)
 
-	o.protocol = newProtocol(nil)
+	protocol := &ots_protocol{}
+	o.protocol = newProtocol(protocol)
 	o.protocol.Set(o.AccessId, o.AccessKey, o.InstanceName, o.Encoding, o.LoggerName)
 
 	return o, nil
@@ -250,7 +251,8 @@ func NewWithRetryPolicy(end_point, accessid, accesskey, instance_name string, re
 	}
 	urllib.SetDefaultSetting(url_setting)
 
-	o.protocol = newProtocol(nil)
+	protocol := &ots_protocol{}
+	o.protocol = newProtocol(protocol)
 	o.protocol.Set(o.AccessId, o.AccessKey, o.InstanceName, o.Encoding, o.LoggerName)
 
 	return o, nil
